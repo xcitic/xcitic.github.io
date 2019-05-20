@@ -2,6 +2,7 @@
   <div id="app">
     <div class="container">
 
+      <!-- While loading show a spinner -->
       <div v-if="loading" class="justify-content-center">
         <i class="fas fa-3x fa-spin fa-spinner"></i>
       </div>
@@ -12,7 +13,7 @@
           <th>Repo Name</th>
           <th>Stars</th>
           <th>Forks</th>
-          <th>Logo</th>
+          <th>Avatar</th>
           <th>Github Link</th>
           <th>Homepage</th>
         </thead>
@@ -21,11 +22,17 @@
             <!-- Get the rank by location the current repo in the repos array and return the index + 1 -->
             <td>{{repos.indexOf(repo) + 1}}</td>
             <td>{{repo.name}}</td>
-            <td>{{repo.stargazers_count}}</td>
-            <td>{{repo.forks_count}}</td>
-            <td v-if="repo.owner.avatar_url"> <img class="avatar" :src="repo.owner.avatar_url"/> </td>
+            <!-- Show the numbers with comma seperators for thousand -->
+            <td>{{repo.stargazers_count.toLocaleString() }}</td>
+            <td>{{repo.forks_count.toLocaleString() }}</td>
+            <!-- If there exists an avatar, return it as an img tag -->
+            <td> <img v-if="repo.owner.avatar_url" class="avatar" :src="repo.owner.avatar_url"/> </td>
             <td> <a :href="repo.html_url" target="_blank">Link</a> </td>
-            <td v-if="repo.homepage"><a :href="repo.homepage" target="_blank">Homepage</a> </td>
+            <!-- If there exists a homepage, return it as an achor tag -->
+            <td>
+              <a v-if="repo.homepage" :href="repo.homepage" target="_blank">Homepage</a>
+              <p v-else>No homepage</p>
+            </td>
           </tr>
         </tbody>
       </table>
@@ -40,7 +47,7 @@
           <a class="page-link" @click="nextPage">Next</a>
         </li>
       </ul>
-    <!-- Pagination -->
+    <!--./Pagination -->
 
     </div>
   </div>
@@ -77,9 +84,12 @@ export default {
       return new Promise((resolve,reject) => {
         axios.get('https://api.github.com/search/repositories?q=language:javascript&sort=stars&order=desc&per_page=100')
         .then(({data}) => {
+          // populate the repos array with data received from the github api
           this.repos = data.items
+          // resolve the Promise
           resolve()
         })
+        // if any error occurs, catch them and print out to the console and return a reject from the promise
         .catch((err) => {
           console.log(err)
           reject(err)
