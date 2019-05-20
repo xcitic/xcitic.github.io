@@ -5,7 +5,7 @@
       <div v-if="loading" class="justify-content-center">
         <i class="fas fa-3x fa-spin fa-spinner"></i>
       </div>
-      
+
       <table class="table">
         <thead>
           <th>Rank</th>
@@ -148,6 +148,10 @@ li {
 
 a {
   color: #42b983;
+}
+
+a:hover {
+  cursor:pointer;
 }
 
 .avatar {
