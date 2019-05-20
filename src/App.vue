@@ -1,6 +1,11 @@
 <template>
   <div id="app">
     <div class="container">
+
+      <div v-if="loading" class="justify-content-center">
+        <i class="fas fa-3x fa-spin fa-spinner"></i>
+      </div>
+      
       <table class="table">
         <thead>
           <th>Rank</th>
@@ -12,9 +17,6 @@
           <th>Homepage</th>
         </thead>
         <tbody>
-          <div v-if="loading" class="text-center">
-            <h1>Loading</h1>
-          </div>
           <tr v-for="repo in showingRepos" :key="repo.id">
             <!-- Get the rank by location the current repo in the repos array and return the index + 1 -->
             <td>{{repos.indexOf(repo) + 1}}</td>
@@ -27,6 +29,19 @@
           </tr>
         </tbody>
       </table>
+
+      <!-- Paginations -->
+      <ul class="pagination justify-content-center">
+        <li class="page-item" :class="page < 1 ? 'disabled' : ''">
+          <a class="page-link" @click="prevPage">Previous</a>
+        </li>
+        <li class="page-item">Page {{page + 1}} of {{maxPage}}</li>
+        <li class="page-item" :class="(page + 1) == maxPage ? 'disabled' : ''">
+          <a class="page-link" @click="nextPage">Next</a>
+        </li>
+      </ul>
+    <!-- Pagination -->
+
     </div>
   </div>
 </template>
@@ -42,15 +57,18 @@ export default {
       repos: [],
       showingRepos: [],
       page: 0,
+      maxPage: 0,
       perPage: 20,
     }
   },
 
   // when component is mounted, run the fetchRepos method to populate the repos array.
   // then run the updateShowing method to return 20 Repos in the showingRepos array.
+  // then calculate the total pages in the pagination
   mounted() {
     this.fetchRepos()
     .then(() => this.updateShowing())
+    .then(() => this.maxPage = this.calculatePages())
   },
 
   methods: {
@@ -74,6 +92,31 @@ export default {
       // and puts them into showingRepos array
       this.showingRepos = this.repos.slice(this.perPage * this.page, ((this.perPage * this.page) + this.perPage))
       this.loading = false
+    },
+
+    calculatePages() {
+      return this.repos.length / this.perPage
+    },
+
+    nextPage() {
+      // show loading spinner
+      this.loading = true
+      //increment page count
+      this.page++
+      // re-run function to repopulate showingRepos array with next 20 repos
+      this.updateShowing()
+      // scroll to top of the list (can add css animation here)
+      window.scrollTo(0,0)
+    },
+
+    prevPage() {
+      this.loading = true
+      // decrement page count
+      this.page--
+      // re-run function to repopulate showingRepos array with previous 20 repos
+      this.updateShowing()
+      // scroll to top
+      window.scrollTo(0,0)
     }
   }
 }
