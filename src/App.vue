@@ -2,25 +2,25 @@
   <div id="app">
     <div class="container">
 
-      <!-- While loading show a spinner -->
-      <div v-if="loading" class="justify-content-center">
-        <i class="fas fa-3x fa-spin fa-spinner"></i>
-      </div>
+    <h1><i class="fas fa-star"/> Githubination </h1>
 
-      <table class="table">
-        <thead>
-          <th>Rank</th>
-          <th>Repo Name</th>
-          <th>Stars</th>
-          <th>Forks</th>
-          <th>Avatar</th>
-          <th>Github Link</th>
-          <th>Homepage</th>
+
+    <div class="card mb-4 mt-4 table-responsive text-nowrap elevation-4">
+
+      <table class="table table-hover">
+        <thead class="thead-dark">
+          <th scope="col">Rank</th>
+          <th scope="col">Repo Name</th>
+          <th scope="col">Stars</th>
+          <th scope="col">Forks</th>
+          <th scope="col">Avatar</th>
+          <th scope="col">Github Link</th>
+          <th scope="col">Homepage</th>
         </thead>
         <tbody>
           <tr v-for="repo in showingRepos" :key="repo.id">
             <!-- Get the rank by location the current repo in the repos array and return the index + 1 -->
-            <td>{{repos.indexOf(repo) + 1}}</td>
+            <th scope="row">{{repos.indexOf(repo) + 1}}</th>
             <td>{{repo.name}}</td>
             <!-- Show the numbers with comma seperators for thousand -->
             <td>{{repo.stargazers_count.toLocaleString() }}</td>
@@ -36,7 +36,12 @@
           </tr>
         </tbody>
       </table>
+      <!-- While loading show a spinner -->
+      <div v-if="loading" class="justify-content-center">
+        <i class="fas fa-3x fa-spin fa-spinner"></i>
+      </div>
 
+      <hr />
       <!-- Paginations -->
       <ul class="pagination justify-content-center">
         <li class="page-item" :class="page < 1 ? 'disabled' : ''">
@@ -48,6 +53,9 @@
         </li>
       </ul>
     <!--./Pagination -->
+    </div><!--./Card -->
+
+
 
     </div>
   </div>
@@ -55,6 +63,8 @@
 
 <script>
 import axios from 'axios'
+
+const git_url = 'https://api.github.com/search/repositories?q=language:javascript&sort=stars&order=desc&per_page=100&page='
 
 export default {
   name: 'app',
@@ -66,6 +76,7 @@ export default {
       page: 0,
       maxPage: 0,
       perPage: 20,
+      gitPage: 1,
     }
   },
 
@@ -75,18 +86,17 @@ export default {
   mounted() {
     this.fetchRepos()
     .then(() => this.updateShowing())
-    .then(() => this.maxPage = this.calculatePages())
+    .then(() => this.calculatePages())
   },
 
   methods: {
     fetchRepos() {
       // create a new Promise that handles async callback to the github api
       return new Promise((resolve,reject) => {
-        axios.get('https://api.github.com/search/repositories?q=language:javascript&sort=stars&order=desc&per_page=100')
+        axios.get(git_url + this.gitPage)
         .then(({data}) => {
-          // populate the repos array with data received from the github api
-          this.repos = data.items
-          // resolve the Promise
+          // add new data from api call to the repos array
+          this.repos = [...this.repos, ...data.items]
           resolve()
         })
         // if any error occurs, catch them and print out to the console and return a reject from the promise
@@ -105,17 +115,24 @@ export default {
     },
 
     calculatePages() {
-      return this.repos.length / this.perPage
+      this.maxPage = this.repos.length / this.perPage
     },
 
     nextPage() {
+      // when 1 click away from maxPage, fetch more repos and add them to the repos array.
+      if(this.page  == (this.maxPage - 3))
+      {
+        this.gitPage++
+        this.fetchRepos()
+            .then(() => this.calculatePages())
+      }
       // show loading spinner
       this.loading = true
       //increment page count
       this.page++
       // re-run function to repopulate showingRepos array with next 20 repos
       this.updateShowing()
-      // scroll to top of the list (can add css animation here)
+      // scroll to top of the list
       window.scrollTo(0,0)
     },
 
